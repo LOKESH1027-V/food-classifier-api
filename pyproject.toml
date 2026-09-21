@@ -1,0 +1,24 @@
+[project]
+name = "food-classifier-api"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { email = "lokesh271003@gmail.com" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.141.1",
+    "pillow>=12.3.0",
+    "python-multipart>=0.0.32",
+    "torch>=2.14.0",
+    "torchvision>=0.29.0",
+    "uvicorn>=0.53.0",
+]
+
+[project.scripts]
+food-classifier-api = "food_classifier_api:main"
+
+[build-system]
+requires = ["uv_build>=0.12.10,<0.13.0"]
+build-backend = "uv_build"

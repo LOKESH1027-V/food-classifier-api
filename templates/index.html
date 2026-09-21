@@ -1,0 +1,347 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Food Image Classifier</title>
+
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Food Image Classifier</h1>
+
+        <p>
+            Upload an image of pizza, steak, or sushi.
+        </p>
+
+
+        <!-- Upload -->
+
+        <div class="upload-area">
+
+            <input
+                type="file"
+                id="imageInput"
+                accept="image/*"
+            >
+
+        </div>
+
+
+        <!-- Preview -->
+
+        <img
+            id="preview"
+            src=""
+            alt="Selected image"
+            style="display: none;"
+        >
+
+
+        <br>
+
+
+        <button
+            id="predictButton"
+            type="button"
+        >
+            Predict
+        </button>
+
+
+        <!-- Result -->
+
+        <div
+            id="result"
+            style="display: none;"
+        >
+
+            <h2 id="prediction"></h2>
+
+            <p id="confidence"></p>
+
+
+            <h3>Probabilities</h3>
+
+
+            <div class="probability">
+
+                <div class="probability-label">
+                    <span>Pizza</span>
+                    <span id="pizzaValue">0%</span>
+                </div>
+
+                <div class="bar">
+                    <div
+                        id="pizzaBar"
+                        class="bar-fill"
+                    ></div>
+                </div>
+
+            </div>
+
+
+            <div class="probability">
+
+                <div class="probability-label">
+                    <span>Steak</span>
+                    <span id="steakValue">0%</span>
+                </div>
+
+                <div class="bar">
+                    <div
+                        id="steakBar"
+                        class="bar-fill"
+                    ></div>
+                </div>
+
+            </div>
+
+
+            <div class="probability">
+
+                <div class="probability-label">
+                    <span>Sushi</span>
+                    <span id="sushiValue">0%</span>
+                </div>
+
+                <div class="bar">
+                    <div
+                        id="sushiBar"
+                        class="bar-fill"
+                    ></div>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <p id="error"></p>
+
+    </div>
+
+
+    <script>
+
+        const imageInput =
+            document.getElementById("imageInput");
+
+        const preview =
+            document.getElementById("preview");
+
+        const predictButton =
+            document.getElementById("predictButton");
+
+        const result =
+            document.getElementById("result");
+
+        const prediction =
+            document.getElementById("prediction");
+
+        const confidence =
+            document.getElementById("confidence");
+
+        const error =
+            document.getElementById("error");
+
+
+        // --------------------------------------------------
+        // Image Preview
+        // --------------------------------------------------
+
+        imageInput.addEventListener("change", () => {
+
+            const file = imageInput.files[0];
+
+            if (!file) {
+
+                preview.style.display = "none";
+
+                return;
+            }
+
+
+            const imageURL =
+                URL.createObjectURL(file);
+
+            preview.src = imageURL;
+
+            preview.style.display = "block";
+
+            result.style.display = "none";
+
+            error.innerHTML = "";
+
+        });
+
+
+        // --------------------------------------------------
+        // Prediction
+        // --------------------------------------------------
+
+        predictButton.addEventListener(
+            "click",
+            async () => {
+
+                const file =
+                    imageInput.files[0];
+
+
+                if (!file) {
+
+                    error.innerHTML =
+                        "Please select an image.";
+
+                    return;
+                }
+
+
+                error.innerHTML = "";
+
+                result.style.display = "block";
+
+                prediction.innerHTML =
+                    "Predicting...";
+
+                confidence.innerHTML = "";
+
+
+                const formData =
+                    new FormData();
+
+                formData.append(
+                    "file",
+                    file
+                );
+
+
+                try {
+
+                    const response =
+                        await fetch(
+                            "/predict",
+                            {
+                                method: "POST",
+                                body: formData
+                            }
+                        );
+
+
+                    const data =
+                        await response.json();
+
+
+                    if (!response.ok) {
+
+                        result.style.display =
+                            "none";
+
+                        error.innerHTML =
+                            data.detail;
+
+                        return;
+                    }
+
+
+                    // Prediction
+
+                    prediction.innerHTML =
+                        `Prediction: ${data.prediction}`;
+
+
+                    // Confidence
+
+                    const confidencePercent =
+                        data.confidence * 100;
+
+
+                    confidence.innerHTML =
+                        `Confidence: ${confidencePercent.toFixed(2)}%`;
+
+
+                    // Probabilities
+
+                    updateProbability(
+                        "pizza",
+                        data.probabilities.pizza
+                    );
+
+
+                    updateProbability(
+                        "steak",
+                        data.probabilities.steak
+                    );
+
+
+                    updateProbability(
+                        "sushi",
+                        data.probabilities.sushi
+                    );
+
+                }
+
+                catch (err) {
+
+                    result.style.display =
+                        "none";
+
+                    error.innerHTML =
+                        "Something went wrong.";
+
+                    console.error(err);
+
+                }
+
+            }
+        );
+
+
+        // --------------------------------------------------
+        // Probability Bar
+        // --------------------------------------------------
+
+        function updateProbability(
+            name,
+            probability
+        ) {
+
+            const percentage =
+                probability * 100;
+
+
+            document.getElementById(
+                `${name}Value`
+            ).innerHTML =
+                `${percentage.toFixed(2)}%`;
+
+
+            document.getElementById(
+                `${name}Bar`
+            ).style.width =
+                `${percentage}%`;
+
+        }
+
+    </script>
+
+</body>
+
+</html>
+
