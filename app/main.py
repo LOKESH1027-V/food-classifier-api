@@ -1,64 +1,147 @@
-from fastapi import FastAPI,UploadFile,File,HTTPException
-from PIL import Image
-import io
-from app.model import predict_image
-from app.schemas import PredictionResponse
+from fastapi import (
+    FastAPI,
+    UploadFile,
+    File,
+    HTTPException,
+    Request,
+)
+
 from fastapi.templating import Jinja2Templates
-from fastapi import Request
 from fastapi.staticfiles import StaticFiles
 
+from PIL import Image
+import io
+
+from app.model import predict_image
+from app.schemas import PredictionResponse
 
 
-app=FastAPI()
+# =========================================================
+# APP
+# =========================================================
+
+app = FastAPI(
+    title="Food Classifier API",
+    description="FastAPI food image classifier using EfficientNet-B0",
+    version="1.0.0",
+)
+
+
+# =========================================================
+# TEMPLATES
+# =========================================================
+
+templates = Jinja2Templates(
+    directory="templates"
+)
+
+
+# =========================================================
+# STATIC FILES
+# =========================================================
 
 app.mount(
     "/static",
     StaticFiles(directory="static"),
-    name="static"
+    name="static",
 )
 
-templates = Jinja2Templates(directory="templates")
-#-------------------------------------------------------------------
-#Home
-#-------------------------------------------------------------------
-@app.get("/",include_in_schema=False)
-async def get(request:Request):
+
+# =========================================================
+# HOME
+# =========================================================
+
+@app.get(
+    "/",
+    include_in_schema=False,
+)
+async def get(request: Request):
+
     return templates.TemplateResponse(
         request=request,
-        name="index.html"
+        name="index.html",
     )
 
 
-#-------------------------------------------------------------------
-#Predict
-#-------------------------------------------------------------------
+# =========================================================
+# HEALTH CHECK
+# =========================================================
 
-@app.post("/predict",response_model=PredictionResponse)
-async def predic(file: UploadFile=File(...)):
+@app.get("/health")
+async def health():
 
-    if not file.content_type or not file.content_type.startswith("image/"):
+    return {
+        "status": "healthy",
+        "model": "EfficientNet-B0",
+        "classes": [
+            "pizza",
+            "steak",
+            "sushi",
+        ],
+    }
+
+
+# =========================================================
+# PREDICTION
+# =========================================================
+
+@app.post(
+    "/predict",
+    response_model=PredictionResponse,
+)
+async def predict(
+    file: UploadFile = File(...),
+):
+
+    # -----------------------------------------------------
+    # Validate file type
+    # -----------------------------------------------------
+
+    if (
+        not file.content_type
+        or not file.content_type.startswith("image/")
+    ):
+
         raise HTTPException(
             status_code=400,
-            detail="Please upload a valid image file."
-        ) 
+            detail="Please upload a valid image file.",
+        )
+
+
+    # -----------------------------------------------------
+    # Read and open image
+    # -----------------------------------------------------
+
     try:
 
-        #Read the content
-        content=await file.read()
+        content = await file.read()
 
-        #Conver bytes to PIL
-        image=Image.open(io.BytesIO(content)).convert("RGB")
+        image = Image.open(
+            io.BytesIO(content)
+        ).convert("RGB")
+
     except Exception:
+
         raise HTTPException(
             status_code=400,
-            detail="Invalid or currupted image."
+            detail="Invalid or corrupted image.",
         )
-    #Apply transform
-    result=predict_image(image=image)
 
+
+    # -----------------------------------------------------
+    # Predict
+    # -----------------------------------------------------
+
+    result = predict_image(
+        image=image
+    )
+
+
+    # -----------------------------------------------------
+    # Response
+    # -----------------------------------------------------
 
     return {
         "filename": file.filename,
-        **result
-    } 
-
+        **result,
+    }
