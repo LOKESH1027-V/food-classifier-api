@@ -18,7 +18,7 @@ __pycache__/
 .DS_Store
 
 # Model files
-*.pth
+
 
 # Test/output files
 *.log
