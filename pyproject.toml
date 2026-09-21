@@ -1,7 +1,7 @@
 [project]
 name = "food-classifier-api"
 version = "0.1.0"
-description = "Add your description here"
+description = "FastAPI food image classifier using EfficientNet-B0"
 readme = "README.md"
 authors = [
     { email = "lokesh271003@gmail.com" }
