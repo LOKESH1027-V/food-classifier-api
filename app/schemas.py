@@ -6,3 +6,4 @@ class PredictionResponse(BaseModel):
     prediction: str
     confidence: float
     probabilities: dict[str, float]
+    agent_response:str

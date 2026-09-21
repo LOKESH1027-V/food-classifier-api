@@ -98,7 +98,7 @@ def predict_image(image):
     ]
 
 
-    threshold = 0.70
+    threshold = 0.65
 
 
     if confidence < threshold:

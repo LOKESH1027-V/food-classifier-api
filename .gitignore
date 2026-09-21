@@ -17,8 +17,5 @@ __pycache__/
 # OS files
 .DS_Store
 
-# Model files
-
-
 # Test/output files
 *.log
